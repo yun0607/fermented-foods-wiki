@@ -1,0 +1,63 @@
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 4 | approved sources: 2 | articles: 4 | approved articles: 2
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 4 | approved sources: 2 | articles: 4 | approved articles: 2
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 4 | approved sources: 4 | articles: 4 | approved articles: 4
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 5 | approved sources: 4 | articles: 5 | approved articles: 4
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 -B scripts/build_wiki_site.py
+Built docs/index.html with 4 approved Markdown articles.
+Exit status: 0
+
+$ python3 -B scripts/build_wiki_site.py --check
+PASS: docs/index.html matches 4 approved Markdown articles.
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 5 | approved sources: 4 | articles: 5 | approved articles: 4
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py --strict
+Wiki Lint | mode=strict
+Sources: 5 | approved sources: 5 | articles: 5 | approved articles: 5
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/build_wiki_site.py
+Built docs/index.html with 5 approved Markdown articles.
+Exit status: 0
+
+$ python3 scripts/build_wiki_site.py --check
+PASS: docs/index.html matches 5 approved Markdown articles.
+Exit status: 0
+
+$ python3 /tmp/fermented-wiki-check-pages.py
+PASS: 5 topics, 5 indexed articles, complete text parity, paragraph citations and source links
+PASS: all internal links, anchors, CSS and the GitHub Pages project subpath
+Exit status: 0
+
+$ python3 /tmp/fermented-wiki-check-http.py
+127.0.0.1 - - [22/Nov/2026 16:00:47] "GET /fermented-foods-wiki/ HTTP/1.1" 200 -
+127.0.0.1 - - [22/Nov/2026 16:00:47] "GET /fermented-foods-wiki/styles.css HTTP/1.1" 200 -
+PASS: HTTP 200 text/html /fermented-foods-wiki/index.html
+PASS: HTTP 200 text/css /fermented-foods-wiki/styles.css
+Exit status: 0
