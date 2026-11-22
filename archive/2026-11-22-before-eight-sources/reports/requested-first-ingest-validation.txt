@@ -1,0 +1,39 @@
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 6 | approved sources: 5 | articles: 6 | approved articles: 4
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 6 | approved sources: 5 | articles: 6 | approved articles: 4
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 6 | approved sources: 6 | articles: 6 | approved articles: 6
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py --strict
+Wiki Lint | mode=strict
+Sources: 6 | approved sources: 6 | articles: 6 | approved articles: 6
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/build_wiki_site.py
+Built docs/index.html with 6 approved Markdown articles.
+Exit status: 0
+
+$ python3 scripts/build_wiki_site.py --check
+PASS: docs/index.html matches 6 approved Markdown articles.
+Exit status: 0
+
+$ python3 /tmp/fermented-wiki-check-requested-ingest.py
+PASS: 5 topics, 6 indexed articles, complete text parity, paragraph citations and source links
+PASS: all internal links, anchors, CSS and the GitHub Pages project subpath
+Exit status: 0
+
+$ git diff --check
+Exit status: 0

@@ -1,0 +1,90 @@
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 8 | approved sources: 0 | articles: 8 | approved articles: 0
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ sh -c 'cd archive/2026-11-22-before-eight-sources && shasum -a 256 -c SHA256SUMS'
+AGENTS.md: OK
+README.md: OK
+raw/README.md: OK
+raw/S001-isapp-fermented-foods.md: OK
+raw/S002-wastyk-diet-trial.md: OK
+raw/S003-maff-natto.md: OK
+raw/S004-nchfp-sauerkraut.md: OK
+raw/S005-uconn-food-mold.md: OK
+raw/S006-harvard-probiotics-for-gut-health.md: OK
+reports/.gitkeep: OK
+reports/article-expansion-validation.txt: OK
+reports/first-ingest-validation.txt: OK
+reports/initial-validation.txt: OK
+reports/requested-first-ingest-validation.txt: OK
+reports/wiki-pages-validation.txt: OK
+scripts/lint_wiki.py: OK
+sources.json: OK
+templates/article.md: OK
+templates/review.md: OK
+templates/source-record.json: OK
+wiki/articles/.gitkeep: OK
+wiki/articles/W001-what-are-fermented-foods.md: OK
+wiki/articles/W002-fermented-foods-and-gut-microbiota.md: OK
+wiki/articles/W003-natto.md: OK
+wiki/articles/W004-sauerkraut.md: OK
+wiki/articles/W005-mold-on-fermented-dairy.md: OK
+wiki/articles/W006-probiotics-and-gut-health.md: OK
+wiki/index.md: OK
+wiki/log.md: OK
+wiki/review/README.md: OK
+wiki/review/article-expansion.md: OK
+wiki/review/batch-02.md: OK
+wiki/review/batch-03.md: OK
+wiki/review/first-ingest.md: OK
+wiki/review/requested-first-ingest.md: OK
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 8 | approved sources: 0 | articles: 8 | approved articles: 0
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 8 | approved sources: 0 | articles: 8 | approved articles: 0
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 8 | approved sources: 8 | articles: 8 | approved articles: 8
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py --strict
+Wiki Lint | mode=strict
+Sources: 8 | approved sources: 8 | articles: 8 | approved articles: 8
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 /tmp/check-eight-lint-regressions.py
+PASS: strict lint detected unlisted source ID
+PASS: strict lint detected URL differs from the specified source
+PASS: strict lint detected duplicate doi
+PASS: strict lint detected approved article cites unapproved source
+PASS: strict lint detected paragraph missing citation
+PASS: strict lint detected duplicate or mismatched entry
+PASS: prior log is preserved; active raw files match the eight-source manifest; safety hold recorded
+Exit status: 0
+
+$ git diff --check
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py --strict
+Wiki Lint | mode=strict
+Sources: 8 | approved sources: 8 | articles: 8 | approved articles: 8
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ git diff --check
+Exit status: 0
+

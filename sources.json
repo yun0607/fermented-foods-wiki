@@ -1,6 +1,6 @@
 [
   {
-    "source_id": "S001",
+    "source_id": "SRC-001",
     "title": "The International Scientific Association for Probiotics and Prebiotics (ISAPP) consensus statement on fermented foods",
     "authors": [
       "Maria L. Marco",
@@ -18,16 +18,54 @@
       "Robert Hutkins"
     ],
     "year": 2021,
-    "url": "https://cris.vub.be/ws/portalfiles/portal/66011463/s41575_020_00390_5.pdf",
-    "doi": "10.1038/s41575-020-00390-5",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC7925329/",
     "source_type": "academic",
-    "raw_path": "raw/S001-isapp-fermented-foods.md",
+    "raw_path": "raw/SRC-001-isapp-fermented-foods.md",
     "accessed_on": "2026-11-22",
     "status": "approved",
-    "notes": "專家共識聲明。2021-01-04 線上發表，2021 年 3 月刊出。 全文連結採布魯塞爾自由大學典藏的正式刊出版本。"
+    "notes": "2021 年，期刊 18 卷 3 期，196–208 頁。",
+    "doi": "10.1038/s41575-020-00390-5",
+    "same_work_url": "https://cris.vub.be/ws/portalfiles/portal/66011463/s41575_020_00390_5.pdf"
   },
   {
-    "source_id": "S002",
+    "source_id": "SRC-002",
+    "title": "Vegetable Fermentation",
+    "authors": [
+      "Joell A. Eifert",
+      "Renee R. Boyer",
+      "Robert C. Williams"
+    ],
+    "year": 2020,
+    "url": "https://www.pubs.ext.vt.edu/content/pubs_ext_vt_edu/en/FST/FST-328/FST-328.html",
+    "source_type": "education",
+    "raw_path": "raw/SRC-002-virginia-tech-vegetables.md",
+    "accessed_on": "2026-11-22",
+    "status": "approved",
+    "notes": "Virginia Cooperative Extension，FST-328P。2020 年 5 月初刊，2025 年 4 月審閱。",
+    "review_items": [
+      {
+        "topic": "酸高麗菜的整批與分批用鹽比例",
+        "status": "needs_human_review",
+        "notes": "SAUERKRAUT 的材料清單與 Procedure 分批用量換算不符。兩項數值均排除於正式 Wiki。"
+      }
+    ]
+  },
+  {
+    "source_id": "SRC-003",
+    "title": "Probiotics for Gut Health",
+    "authors": [
+      "Nancy Oliveira"
+    ],
+    "year": 2025,
+    "url": "https://nutritionsource.hsph.harvard.edu/probiotics/",
+    "source_type": "education",
+    "raw_path": "raw/SRC-003-harvard-probiotics.md",
+    "accessed_on": "2026-11-22",
+    "status": "approved",
+    "notes": "The Nutrition Source，Harvard T.H. Chan School of Public Health。Teresa Fung 審閱，頁面歷程記載 2025-03-04 編輯並發布。"
+  },
+  {
+    "source_id": "SRC-004",
     "title": "Gut Microbiota-Targeted Diets Modulate Human Immune Status",
     "authors": [
       "Hannah C. Wastyk",
@@ -47,57 +85,77 @@
       "Justin L. Sonnenburg"
     ],
     "year": 2021,
-    "url": "https://pmc.ncbi.nlm.nih.gov/articles/9020749/",
-    "doi": "10.1016/j.cell.2021.06.019",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC9020749/",
     "source_type": "academic",
-    "raw_path": "raw/S002-wastyk-diet-trial.md",
+    "raw_path": "raw/SRC-004-wastyk-diet-trial.md",
     "accessed_on": "2026-11-22",
     "status": "approved",
-    "notes": "原始人體飲食介入研究；PMC 提供公開作者手稿。"
+    "notes": "2021 年刊於 Cell，184(16)，4137–4153.e14。PMC 的作者手稿在 2022 年公開。",
+    "doi": "10.1016/j.cell.2021.06.019",
+    "same_work_url": "https://doi.org/10.1016/j.cell.2021.06.019"
   },
   {
-    "source_id": "S003",
-    "title": "Natto",
+    "source_id": "SRC-005",
+    "title": "Preserving food at home: Fermentation",
     "authors": [
-      "Ministry of Agriculture, Forestry and Fisheries, Japan"
+      "University of Minnesota Extension"
     ],
     "year": null,
-    "url": "https://www.maff.go.jp/e/policies/market/dento_syoku/menu/natto_ibaraki.html",
-    "source_type": "government",
-    "raw_path": "raw/S003-maff-natto.md",
+    "url": "https://extension.umn.edu/food/preparing/cooking-at-home/food-preservation/fermentation",
+    "source_type": "education",
+    "raw_path": "raw/SRC-005-umn-home-fermentation.md",
     "accessed_on": "2026-11-22",
     "status": "approved",
-    "notes": "Traditional Foods in Japan 對茨城縣納豆的地方飲食介紹。"
+    "notes": "初刊年份未標示。Amy Johnston 審閱，頁面標示 Reviewed in 2026。"
   },
   {
-    "source_id": "S004",
-    "title": "Sauerkraut",
+    "source_id": "SRC-006",
+    "title": "A review of sourdough starters: ecology, practices, and sensory quality with applications for baking and recommendations for future research",
+    "authors": [
+      "Martha D. Calvert",
+      "Anne A. Madden",
+      "Lauren M. Nichols",
+      "Nick M. Haddad",
+      "Jacob Lahne",
+      "Robert R. Dunn",
+      "Erin A. McKenney"
+    ],
+    "year": 2021,
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC8117929/",
+    "source_type": "academic",
+    "raw_path": "raw/SRC-006-calvert-sourdough-starters.md",
+    "accessed_on": "2026-11-22",
+    "status": "approved",
+    "notes": "2021-05-10 發表於 PeerJ 9:e11389。",
+    "doi": "10.7717/peerj.11389",
+    "same_work_url": "https://curis.ku.dk/ws/portalfiles/portal/279255725/A_review_of_sourdough_starters.pdf"
+  },
+  {
+    "source_id": "SRC-007",
+    "title": "General Information on Fermenting",
     "authors": [
       "National Center for Home Food Preservation"
     ],
     "year": null,
-    "url": "https://nchfp.uga.edu/how/ferment/recipes/sauerkraut",
+    "url": "https://nchfp.uga.edu/how/ferment/general-information-fermenting/general-information-on-fermenting/",
     "source_type": "education",
-    "raw_path": "raw/S004-nchfp-sauerkraut.md",
+    "raw_path": "raw/SRC-007-nchfp-general-fermenting.md",
     "accessed_on": "2026-11-22",
     "status": "approved",
-    "notes": "公開家庭食物保存指南。網頁無發表日期，改編自 USDA 2015 年修訂版指南。"
+    "notes": "網頁未標發表年。頁尾註明改編自美國農業部 2015 年修訂的 Complete Guide to Home Canning。"
   },
   {
-    "source_id": "S005",
-    "title": "Handling Food with Mold",
+    "source_id": "SRC-008",
+    "title": "Probiotics: Usefulness and Safety",
     "authors": [
-      "Austin Goldberg",
-      "Daniela Avelino",
-      "Valerie Duffy"
+      "National Center for Complementary and Integrative Health"
     ],
-    "year": 2024,
-    "url": "https://extension.uconn.edu/publication/handling-food-with-mold/",
-    "doi": "10.61899/ucext.v1.063.2024",
-    "source_type": "education",
-    "raw_path": "raw/S005-uconn-food-mold.md",
+    "year": null,
+    "url": "https://www.nccih.nih.gov/health/probiotics-usefulness-and-safety",
+    "source_type": "government",
+    "raw_path": "raw/SRC-008-nih-probiotics-safety.md",
     "accessed_on": "2026-11-22",
     "status": "approved",
-    "notes": "UConn Extension 公開食品安全指引，2024 年 4 月，EXT063。"
+    "notes": "NIH 所屬 NCCIH 的科普頁面。初刊年未標示。頁尾標示 2019 年 8 月，現行正文另有後續 FDA 警示。"
   }
 ]

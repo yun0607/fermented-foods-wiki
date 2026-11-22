@@ -1,86 +1,232 @@
 #!/usr/bin/env python3
-"""Offline structural lint. Does NOT assess scientific fidelity or safety."""
-import argparse, json, re, sys
+"""Offline checks for the eight-source Markdown Wiki."""
+
+import argparse
+import json
+import re
 from pathlib import Path
-from urllib.parse import urlparse
+
 ROOT = Path(__file__).resolve().parents[1]
-CATEGORIES = {'發酵的基本原理','常見發酵食品介紹','發酵食品與健康','自製發酵食品','食品安全與保存'}
-REQUIRED = ['AGENTS.md','README.md','sources.json','wiki/index.md','wiki/log.md','raw','wiki/articles','wiki/review','templates','reports']
+TOPICS = (
+    "發酵的基本原理", "常見發酵食品介紹", "發酵食品與健康",
+    "自製發酵食品", "食品安全與保存",
+)
+CATEGORIES = set(TOPICS)
+SOURCE_URLS = dict(zip(
+    (f"SRC-{number:03}" for number in range(1, 9)),
+    (
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC7925329/",
+        "https://www.pubs.ext.vt.edu/content/pubs_ext_vt_edu/en/FST/FST-328/FST-328.html",
+        "https://nutritionsource.hsph.harvard.edu/probiotics/",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC9020749/",
+        "https://extension.umn.edu/food/preparing/cooking-at-home/food-preservation/fermentation",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC8117929/",
+        "https://nchfp.uga.edu/how/ferment/general-information-fermenting/general-information-on-fermenting/",
+        "https://www.nccih.nih.gov/health/probiotics-usefulness-and-safety",
+    ),
+))
+CITATION = re.compile(r"\[((?:SRC-\d{3}|S\d{3,}))\]")
+ARTICLE_ID = re.compile(r"W\d{3,}")
+STATES = {"draft", "approved", "blocked", "needs_human_review"}
+REQUIRED = (
+    "AGENTS.md", "README.md", "sources.json", "wiki/index.md", "wiki/log.md",
+    "raw", "wiki/articles", "wiki/review", "templates", "reports",
+)
+
+
+def load_sources(errors):
+    try:
+        records = json.loads((ROOT / "sources.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError) as exc:
+        errors.append(f"sources.json: {exc}")
+        return {}
+    if not isinstance(records, list):
+        errors.append("sources.json must be a list")
+        return {}
+
+    sources = {}
+    seen = {field: set() for field in ("url", "raw_path", "doi")}
+    raw_root = ROOT / "raw"
+    for ordinal, record in enumerate(records, 1):
+        if not isinstance(record, dict):
+            errors.append(f"source #{ordinal} must be an object")
+            continue
+        sid = record.get("source_id")
+        if not isinstance(sid, str) or sid not in SOURCE_URLS:
+            errors.append(f"source #{ordinal}: unlisted source ID {sid!r}")
+            continue
+        if sid in sources:
+            errors.append(f"duplicate source ID: {sid}")
+            continue
+        sources[sid] = record
+        for field in ("title", "authors", "year", "url", "source_type", "raw_path", "accessed_on", "status"):
+            if field not in record:
+                errors.append(f"{sid}: missing {field}")
+        title, authors = record.get("title"), record.get("authors")
+        if not isinstance(title, str) or not title.strip():
+            errors.append(f"{sid}: missing title")
+        if not isinstance(authors, list) or not authors or not all(isinstance(a, str) and a.strip() for a in authors):
+            errors.append(f"{sid}: missing author or institution")
+        if record.get("year") is not None and type(record["year"]) is not int:
+            errors.append(f"{sid}: year must be an integer or null")
+        if record.get("url") != SOURCE_URLS[sid]:
+            errors.append(f"{sid}: URL differs from the specified source")
+        if record.get("status") not in STATES | {"pending"}:
+            errors.append(f"{sid}: invalid status")
+        if record.get("source_type") not in ("academic", "government", "professional", "education", "guide"):
+            errors.append(f"{sid}: invalid source_type")
+        if not re.fullmatch(r"\d{4}-\d{2}-\d{2}", str(record.get("accessed_on", ""))):
+            errors.append(f"{sid}: invalid access date")
+        for field, values in seen.items():
+            value = record.get(field)
+            if isinstance(value, str):
+                key = value.casefold() if field == "doi" else value
+                if key in values:
+                    errors.append(f"{sid}: duplicate {field} {value}")
+                values.add(key)
+        raw_path = record.get("raw_path")
+        if not isinstance(raw_path, str):
+            errors.append(f"{sid}: missing raw_path")
+            continue
+        path = (ROOT / raw_path).resolve()
+        if not raw_path.startswith("raw/") or raw_root not in path.parents or not path.is_file():
+            errors.append(f"{sid}: raw_path unavailable or outside raw/")
+        elif sid not in path.read_text(encoding="utf-8") or SOURCE_URLS[sid] not in path.read_text(encoding="utf-8"):
+            errors.append(f"{sid}: raw file lacks its source ID or URL")
+    return sources
+
+
+def check_article(path, sources, errors):
+    text = path.read_text(encoding="utf-8")
+    front = re.match(r"\A---\n(.+?)\n---\n", text, re.S)
+    if not front:
+        errors.append(f"{path.name}: missing front matter")
+        return None
+    fields = dict(line.split(": ", 1) for line in front[1].splitlines() if ": " in line)
+    aid, category, state = (fields.get(key, "") for key in ("article_id", "category", "status"))
+    if not ARTICLE_ID.fullmatch(aid) or not path.name.startswith(aid + "-"):
+        errors.append(f"{path.name}: invalid article ID or filename")
+    if category not in CATEGORIES or state not in STATES:
+        errors.append(f"{path.name}: invalid category or status")
+
+    body = text[front.end():].strip()
+    title_match = re.search(r"^# (\S.*)$", body, re.M)
+    if not title_match:
+        errors.append(f"{path.name}: missing title")
+    title = title_match[1] if title_match else ""
+    for label in ("摘要", "關鍵字"):
+        if not re.search(rf"^\*\*{label}：\*\*\s+\S", body, re.M):
+            errors.append(f"{path.name}: missing {label}")
+    for heading in ("正文", "研究限制與不確定性", "來源"):
+        if not re.search(rf"^## {heading}\s*$", body, re.M):
+            errors.append(f"{path.name}: missing section {heading}")
+
+    declaration = re.fullmatch(r"\[(SRC-\d{3}(?:,\s*SRC-\d{3})*)\]", fields.get("source_ids", ""))
+    declared = set()
+    if declaration:
+        entries = re.findall(r"SRC-\d{3}", declaration[1])
+        declared = set(entries)
+        if len(entries) != len(declared):
+            errors.append(f"{path.name}: duplicate declared source ID")
+    else:
+        errors.append(f"{path.name}: invalid source_ids")
+
+    content, _, bibliography = body.partition("\n## 來源\n")
+    cited = set(CITATION.findall(content))
+    refs = {}
+    for line in bibliography.strip().splitlines():
+        entry = re.fullmatch(r"- \[(SRC-\d{3})\]\s+(.+)", line)
+        if not entry or entry[1] in refs:
+            errors.append(f"{path.name}: invalid or repeated bibliography entry")
+            continue
+        refs[entry[1]] = entry[2]
+    if not cited or cited != declared or refs.keys() != declared:
+        errors.append(f"{path.name}: declared, inline and bibliography source IDs differ")
+    for sid in cited | declared | refs.keys():
+        source = sources.get(sid)
+        if source is None:
+            errors.append(f"{path.name}: unknown source {sid}")
+            continue
+        if state == "approved" and source.get("status") != "approved":
+            errors.append(f"{path.name}: approved article cites unapproved source {sid}")
+        if sid in refs and f"({SOURCE_URLS[sid]})" not in refs[sid]:
+            errors.append(f"{path.name}: bibliography is missing the designated URL for {sid}")
+
+    for block in re.split(r"\n\s*\n", content.strip()):
+        if block.startswith(("#", "**關鍵字：**")):
+            continue
+        if not CITATION.search(block):
+            errors.append(f"{path.name}: paragraph missing citation: {block[:36]}")
+    return aid, category, state, title, declared
+
+
+def check_index(approved, errors):
+    path = ROOT / "wiki/index.md"
+    if not path.is_file():
+        return
+    expected_headings = {f"## {number}. {topic}": topic for number, topic in enumerate(TOPICS, 1)}
+    seen_topics = set()
+    indexed = set()
+    category = None
+    for line in path.read_text(encoding="utf-8").splitlines():
+        if line.startswith("## "):
+            category = expected_headings.get(line)
+            if category is None or category in seen_topics:
+                errors.append(f"wiki/index.md: unexpected or duplicate heading {line}")
+            seen_topics.add(category)
+        if line.startswith("- "):
+            entry = re.fullmatch(r"- (W\d{3,}) \[([^\]]+)\]\(articles/([^/]+\.md)\)", line)
+            if not entry:
+                errors.append(f"wiki/index.md: invalid article entry {line}")
+                continue
+            aid, title, filename = entry.groups()
+            if aid in indexed or approved.get(aid) != (category, title, filename):
+                errors.append(f"wiki/index.md: duplicate or mismatched entry {aid}")
+            indexed.add(aid)
+    if seen_topics != CATEGORIES:
+        errors.append("wiki/index.md: expected all five category headings")
+    if indexed != approved.keys():
+        errors.append("wiki/index.md: entries must match approved articles")
+
 
 def main():
-    parser=argparse.ArgumentParser()
-    parser.add_argument('--strict',action='store_true',help='require >=5 approved unique sources and >=1 approved article')
-    args=parser.parse_args()
-    errors=[]; warnings=[]
-    for name in REQUIRED:
-        if not (ROOT/name).exists(): errors.append('missing path: '+name)
-    try: sources=json.loads((ROOT/'sources.json').read_text(encoding='utf-8'))
-    except Exception as exc: errors.append('sources.json invalid: '+str(exc)); sources=[]
-    if not isinstance(sources,list): errors.append('sources.json must be a list'); sources=[]
-    ids=set(); urls=set(); by_id={}; approved_sources=set()
-    for idx,s in enumerate(sources,1):
-        if not isinstance(s,dict): errors.append(f'source #{idx} is not an object'); continue
-        sid=s.get('source_id'); url=s.get('url'); status=s.get('status')
-        if not isinstance(sid,str) or not re.fullmatch(r'S\d{3,}',sid): errors.append(f'bad source_id in #{idx}: {sid}')
-        elif sid in ids: errors.append('duplicate source_id: '+sid)
-        else: ids.add(sid);by_id[sid]=s
-        for field in ['title','authors','year','url','source_type','raw_path','accessed_on','status']:
-            if field not in s: errors.append(f'{sid} missing field: {field}')
-        if not isinstance(s.get('title'),str) or not s['title'].strip(): errors.append(f'{sid} empty title')
-        if not isinstance(s.get('authors'),list) or not s['authors']: errors.append(f'{sid} missing authors/organization (use ["unknown"] with note if necessary)')
-        if s.get('year') is not None and not isinstance(s.get('year'),int): errors.append(f'{sid} year must be int or null')
-        if not isinstance(url,str) or urlparse(url).scheme not in ('https','http') or not urlparse(url).netloc: errors.append(f'{sid} invalid URL')
-        elif url in urls: errors.append('duplicate source URL: '+url)
-        else: urls.add(url)
-        if s.get('source_type') not in ('academic','government','professional','education','guide'): errors.append(f'{sid} invalid source_type')
-        if status not in ('pending','draft','approved','blocked','needs_human_review'): errors.append(f'{sid} invalid status')
-        if status=='approved': approved_sources.add(sid)
-        raw_path=s.get('raw_path')
-        if isinstance(raw_path,str):
-            p=(ROOT/raw_path).resolve()
-            if ROOT not in p.parents or not raw_path.startswith('raw/') or not p.is_file(): errors.append(f'{sid} raw_path unavailable/unsafe: {raw_path}')
-        else: errors.append(f'{sid} raw_path missing')
-    articles=sorted((ROOT/'wiki/articles').glob('*.md'))
-    article_ids=set();approved_articles=0;referenced_approved=set()
-    for p in articles:
-        content=p.read_text(encoding='utf-8')
-        if not content.startswith('---\n') or '\n---\n' not in content[4:]: errors.append(f'{p.name}: missing YAML-like front matter');continue
-        meta,body=content[4:].split('\n---\n',1)
-        fields={}
-        for line in meta.splitlines():
-            if ':' in line:
-                k,v=line.split(':',1);fields[k.strip()]=v.strip()
-        aid=fields.get('article_id','')
-        if not re.fullmatch(r'W\d{3,}',aid): errors.append(f'{p.name}: invalid article_id')
-        if aid in article_ids: errors.append(f'duplicate article ID {aid}')
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--strict", action="store_true", help="require all eight approved sources and all five topics")
+    args = parser.parse_args()
+    errors = [f"missing path: {name}" for name in REQUIRED if not (ROOT / name).exists()]
+    sources = load_sources(errors)
+    approved_sources = {sid for sid, source in sources.items() if source.get("status") == "approved"}
+    article_ids = set()
+    approved = {}
+    referenced = set()
+    paths = sorted((ROOT / "wiki/articles").glob("*.md"))
+    for path in paths:
+        result = check_article(path, sources, errors)
+        if result is None:
+            continue
+        aid, category, state, title, declared = result
+        if aid in article_ids:
+            errors.append(f"duplicate article ID: {aid}")
         article_ids.add(aid)
-        if fields.get('category') not in CATEGORIES: errors.append(f'{p.name}: unknown category')
-        state=fields.get('status')
-        if state not in ('draft','approved','blocked','needs_human_review'): errors.append(f'{p.name}: invalid status')
-        if not re.search(r'^#\s+\S',body,re.M):errors.append(f'{p.name}: missing H1 title')
-        for token in ['**摘要：**','**關鍵字：**','## 正文','## 來源']:
-            if token not in body: errors.append(f'{p.name}: missing {token}')
-        declared=set(re.findall(r'S\d{3,}',fields.get('source_ids','')))
-        cited=set(re.findall(r'\[(S\d{3,})\]',body))
-        if not declared: errors.append(f'{p.name}: missing source_ids')
-        if not cited: errors.append(f'{p.name}: no source citations')
-        for ref in declared|cited:
-            if ref not in ids: errors.append(f'{p.name}: unknown source {ref}')
-        for ref in cited-declared: errors.append(f'{p.name}: citation {ref} not declared in metadata')
-        if state=='approved':
-            approved_articles+=1;referenced_approved |= declared
-            for ref in declared:
-                if ref not in approved_sources: errors.append(f'{p.name}: approved article refers to non-approved source {ref}')
-    if not sources: warnings.append('0 source records; no ingest performed yet')
-    if not articles: warnings.append('0 wiki articles; this is a project scaffold')
+        if state == "approved":
+            approved[aid] = (category, title, path.name)
+            referenced.update(declared)
+    check_index(approved, errors)
     if args.strict:
-        if len(approved_sources)<5:errors.append(f'strict: approved sources {len(approved_sources)}/5')
-        if approved_articles<1:errors.append('strict: no approved Wiki article')
-        if len(referenced_approved)<5:errors.append(f'strict: approved articles cite {len(referenced_approved)}/5 approved sources')
-    print('Wiki Lint | mode='+('strict' if args.strict else 'scaffold'))
-    print(f'Sources: {len(sources)} | approved sources: {len(approved_sources)} | articles: {len(articles)} | approved articles: {approved_articles}')
-    for w in warnings:print('WARNING:',w)
-    for e in errors:print('ERROR:',e)
-    print('RESULT:', 'PASS' if not errors else 'FAIL', f'({len(errors)} errors, {len(warnings)} warnings)')
-    return 1 if errors else 0
-if __name__=='__main__':sys.exit(main())
+        for label, actual in (("registered", sources.keys()), ("approved", approved_sources), ("cited by approved articles", referenced)):
+            missing = SOURCE_URLS.keys() - actual
+            if missing:
+                errors.append(f"strict: missing {label} sources: {', '.join(sorted(missing))}")
+        missing_topics = CATEGORIES - {article[0] for article in approved.values()}
+        if missing_topics:
+            errors.append(f"strict: missing approved topics: {', '.join(sorted(missing_topics))}")
+    print(f"Wiki Lint | mode={'strict' if args.strict else 'scaffold'}")
+    print(f"Sources: {len(sources)} | approved sources: {len(approved_sources)} | articles: {len(paths)} | approved articles: {len(approved)}")
+    for error in errors:
+        print(f"ERROR: {error}")
+    print(f"RESULT: {'FAIL' if errors else 'PASS'} ({len(errors)} errors, 0 warnings)")
+    return int(bool(errors))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

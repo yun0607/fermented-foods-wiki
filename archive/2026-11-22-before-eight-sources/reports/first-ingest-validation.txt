@@ -1,0 +1,52 @@
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 2 | approved sources: 0 | articles: 2 | approved articles: 0
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 2 | approved sources: 0 | articles: 2 | approved articles: 0
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 scripts/lint_wiki.py
+Wiki Lint | mode=scaffold
+Sources: 2 | approved sources: 2 | articles: 2 | approved articles: 2
+RESULT: PASS (0 errors, 0 warnings)
+Exit status: 0
+
+$ python3 - <<'PY'
+import json
+import re
+from pathlib import Path
+
+sources = {s["source_id"]: s for s in json.loads(Path("sources.json").read_text())}
+index_path = Path("wiki/index.md")
+index = index_path.read_text()
+articles = sorted(Path("wiki/articles").glob("*.md"))
+links = re.findall(r"^\- (W\d+) \[([^\]]+)\]\((articles/[^)]+)\)$", index, re.M)
+assert len(sources) == len(links) == len(articles) == 2
+assert len({s["doi"] for s in sources.values()}) == len(sources)
+assert {index_path.parent / link[2] for link in links} == set(articles)
+for article in articles:
+    metadata, body = article.read_text()[4:].split("\n---\n", 1)
+    fields = dict(line.split(": ", 1) for line in metadata.splitlines())
+    title = re.search(r"^# (.+)$", body, re.M)[1]
+    index_section = next(section for section in index.split("\n## ") if f". {fields['category']}\n" in section)
+    assert f"- {fields['article_id']} [{title}](articles/{article.name})" in index_section
+    assert fields["status"] == "approved"
+    source_id = fields["source_ids"].strip("[]")
+    source = sources[source_id]
+    assert source["status"] == "approved"
+    content, bibliography = body.split("\n## 來源\n", 1)
+    for item in [source_id, source["url"], source["title"], str(source["year"]), *source["authors"]]:
+        assert item in bibliography, (article, item)
+    for paragraph in content.strip().split("\n\n"):
+        if not paragraph.startswith(("#", "**關鍵字：**")):
+            assert paragraph.endswith(f"[{source_id}]"), (article, paragraph)
+    print(f"{fields['article_id']}: index, category, link, paragraph citations and bibliography PASS")
+PY
+W001: index, category, link, paragraph citations and bibliography PASS
+W002: index, category, link, paragraph citations and bibliography PASS
+Exit status: 0
