@@ -1,0 +1,14 @@
+{
+  "source_id": "S001",
+  "title": "（原始文獻標題）",
+  "authors": [
+    "（作者或機構）"
+  ],
+  "year": null,
+  "url": "https://example.org/REPLACE",
+  "source_type": "academic",
+  "raw_path": "raw/REPLACE.pdf",
+  "accessed_on": "YYYY-MM-DD",
+  "status": "pending",
+  "notes": "（研究條件、可信度、使用限制）"
+}
